@@ -2,11 +2,14 @@
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
 #include <ArduinoJson.h>
+#include "AsyncJson.h"
 #include <WiFiClientSecure.h>
 #include <UniversalTelegramBot.h>
 #include <NoDelay.h>
 #include "time.h"
 #include <Bounce2.h>
+#include <LittleFS.h>
+#include "DHT_Async.h"
 
 // Conexion a internet
 const char *SSID = "ssid";
@@ -59,7 +62,7 @@ Estado estado;
 StaticJsonDocument<250> jsonDocument;
 char buffer[250];
 
-// URL de un servidor NTP (Network Time Protocol)
+// Configuración NTP
 const char *ntpServer = "pool.ntp.org";
 // Offset en segundos de la zona horaria local con respecto a GMT
 const long gmtOffset_sec = -25200;  // -7*3600
@@ -68,18 +71,21 @@ const int daylightOffset_sec = 0;
 // Estructura con la informacion de la fecha/hora actual
 struct tm timeinfo;
 
+// Configuración DHT
+#define DHT_SENSOR_TYPE DHT_TYPE_11
+const int DHT_SENSOR_PIN = 10;
+DHT_Async dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
+
 // Parametros de la señal PWM
 const int FRECUENCIA = 5000;
 const int RESOLUCION = 8;
-// Valor minimo del ciclo de trabajo
 const unsigned int CT_MIN = 0;
-// Valor maximo del ciclo de trabajo. 2**RESOLUCION - 1
 const unsigned int CT_MAX = 255;
 
 // Variables para lecturas de parametros y limites
 float temperatura;
 float humedad;
-float iluminacion;
+int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
@@ -95,9 +101,7 @@ float iluminacionMaxima;
 // Setup inicial
 void setupRutas();
 void iniciarConexionWifi();
-// Manejo de documentos json
-void crearJson(char *tag, float value, char *unit);
-void anhadirObjetoJson(char *tag, float value, char *unit);
+void inicializaLittleFS();
 // Cambios de estado
 void estadoOptimo();
 void alertarHumedadAlta();
@@ -108,8 +112,10 @@ void alertarIluminacionBaja();
 void alertarEscape();
 void leerDatos();
 // Manejo de peticiones
+// Leecturas
 void actualizaIntensidadLuz();
 void realizarLecturas();
+String obtenFecha();
 
 void setup() {
   Serial.begin(BAUD_RATE);
@@ -132,7 +138,7 @@ void loop() {
   int valor = debouncer.read();
 
   if (pausaLecturas.update()) {
-    void realizarLecturas();
+    realizarLecturas();
   }
 
   if (pausaReloj.update()) {
@@ -200,27 +206,105 @@ void iniciarConexionWifi() {
 }
 
 void setupRutas() {
-  //servidor.on("/datos", getData);
-  //servidor.on("/mensaje", HTTP_POST, handlePost);
+  // Declaración de rutas para páginas
+  servidor.serveStatic("/", LittleFS, "/");
+  servidor.on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(LittleFS, "/index.html", "text/html");
+  });
+
+  // Declaración de API REST
+  /*
+   * Get datos - obtiene todos los datos de que lee el esp32, así como los minimos y máximos actuales
+   * con un JSON en el siguiente formato:
+   * {
+   *  "temperatura": {
+   *      "minima": 45,
+   *      "maxima": 90,
+   *      "actual": 50
+   *  },
+   *  "iluminacion": {
+   *      "minima": 45,
+   *      "maxima": 90,
+   *      "actual": 50
+   *  },
+   *  "humedad": {
+   *      "minima": 45,
+   *      "maxima": 90,
+   *      "actual": 50
+   *  },
+   *  "fecha": ""
+   * }
+   */
+  servidor.on("/datos", [](AsyncWebServerRequest *request) {
+    AsyncResponseStream *response = request->beginResponseStream("application/json");
+    JsonDocument doc;
+    JsonDocument tempJson;
+    JsonDocument ilumJson;
+    JsonDocument humJson;
+    // Recopila datos de la temperatura
+    tempJson["minima"] = temperaturaMinima;
+    tempJson["maxima"] = temperaturaMaxima;
+    tempJson["actual"] = temperatura;
+    // Recopila datos de la iluminación
+    ilumJson["minima"] = iluminacionMinima;
+    ilumJson["maxima"] = iluminacionMaxima;
+    ilumJson["actual"] = iluminacion;
+    // Recopila datos de la humedad
+    humJson["minima"] = humedadMinima;
+    humJson["maxima"] = humedadMaxima;
+    humJson["actual"] = humedad;
+    // Arma documento a enviar
+    doc["temperatura"] = tempJson;
+    doc["iluminacion"] = ilumJson;
+    doc["humedad"] = humJson;
+    doc["fecha"] = obtenFecha();
+
+    serializeJson(doc, *response);
+
+    request->send(response);
+  });
+
+  servidor.onNotFound([](AsyncWebServerRequest *request) {
+    request->send(404, "text/plain", "URL no encontrada");
+  });
+
+  /*
+   * Los siguientes son manejadores para los post que establcen los valores con los que se comparan las lecturas responde a peticiones con jsons del siguiente formato
+   * {
+   *   "minima": 45,
+   *   "maxima": 90
+   * }
+   */
+  AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject jsonObj = json.as<JsonObject>();
+    temperaturaMinima = jsonObj["minima"];
+    temperaturaMaxima = jsonObj["minima"];
+  });
+
+  AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject jsonObj = json.as<JsonObject>();
+    humedadMinima = jsonObj["minima"];
+    humedadMaxima = jsonObj["minima"];
+  });
+
+  AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", [](AsyncWebServerRequest *request, JsonVariant &json) {
+    JsonObject jsonObj = json.as<JsonObject>();
+    iluminacionMinima = jsonObj["minima"];
+    iluminacionMaxima = jsonObj["minima"];
+  });
+  servidor.addHandler(handlerEstablecerTempMinMax);
+  servidor.addHandler(handlerEstablecerHumMinMax);
+  servidor.addHandler(handlerEstablecerIluminacionMinMax);
 
   servidor.begin();
 }
 
-// Crea un objeto json a partir de un par llave-valor
-void crearJson(char *tag, float value, char *unit) {
-  jsonDocument.clear();
-  jsonDocument["type"] = tag;
-  jsonDocument["value"] = value;
-  jsonDocument["unit"] = unit;
-  serializeJson(jsonDocument, buffer);
-}
-
-// Añade un par llave-valor a un objeto json existente
-void anhadirObjetoJson(char *tag, float value, char *unit) {
-  JsonObject obj = jsonDocument.createNestedObject();
-  obj["type"] = tag;
-  obj["value"] = value;
-  obj["unit"] = unit;
+void inicializaLittleFS() {
+  if (!LittleFS.begin(true)) {
+    Serial.println("Ocurrió un error al montar LittleFS");
+  } else {
+    Serial.println("Se monto LittleFS con exito");
+  }
 }
 
 void realizarLecturas() {
@@ -228,8 +312,21 @@ void realizarLecturas() {
   muestraTouch = touchRead(PIN_TOUCH);
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
+  dht_sensor.measure(&temperatura, &humedad);
   Serial.print("Iluminacion");
   Serial.print(iluminacion);
+}
+
+String obtenFecha() {
+  char sFecha[80];
+  // Obtiene la fecha y hora actual
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("No se pudo obtener la fecha/hora");
+    sFecha[0] = '\0';
+  } else {
+    strftime(sFecha, 80, "%d/%m/%Y %H:%M:%S", &timeinfo);
+  }
+  return String(sFecha);
 }
 void actualizaIntensidadLuz() {
   // Lee y digitaliza el valor del voltaje en el potenciometro
