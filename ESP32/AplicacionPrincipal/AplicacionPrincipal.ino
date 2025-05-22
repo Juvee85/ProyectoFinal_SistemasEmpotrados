@@ -89,7 +89,7 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 50;
+const int touchTreshold = 20000;
 float temperaturaMinima = 0;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
@@ -165,7 +165,7 @@ void loop() {
       if (iluminacion < iluminacionMinima) alertarIluminacionBaja();
       if (iluminacion > iluminacionMaxima) alertarIluminacionAlta();
       if (temperatura < temperaturaMinima || temperatura > temperaturaMaxima) alertarTemperatura();
-      if (muestraTouch >= touchTreshold) alertarEscape();
+      if (muestraTouch < touchTreshold) alertarEscape();
       break;
 
     case HUMEDAD_BAJA:
@@ -184,35 +184,26 @@ void loop() {
       break;
 
     case HUMEDAD_ALTA:
-      Serial.print("Humedad: ");
-      Serial.println(humedad);
       if (humedad <= humedadMaxima) estadoOptimo();
       break;
 
     case TEMPERATURA_INADECUADA:
-      Serial.print("Temperatura: ");
-      Serial.println(temperatura);
       if (temperatura >= temperaturaMinima && temperatura <= temperaturaMaxima) {
         estadoOptimo();
       }
       break;
 
     case ILUMINACION_ALTA:
-      Serial.print("Iluminación: ");
-      Serial.println(iluminacion);
       if (iluminacion <= iluminacionMaxima) estadoOptimo();
       if (cicloTrabajo >= CT_MIN) cicloTrabajo--;
       break;
 
     case ILUMINACION_BAJA:
-      Serial.print("Iluminación: ");
-      Serial.println(iluminacion);
       if (iluminacion >= iluminacionMinima) estadoOptimo();
       if (cicloTrabajo <= CT_MAX) cicloTrabajo++;
       break;
 
     case MASCOTA_ESCAPADA:
-      Serial.println("Esperando que presiones el botón para salir del estado de escape...");
       if (valor == HIGH) estadoOptimo();
       break;
   }
