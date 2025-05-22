@@ -95,6 +95,9 @@ float humedadMinima = 0;
 float humedadMaxima = 100;
 float iluminacionMinima = 0;
 float iluminacionMaxima = 240;
+bool yaNotificoEscape = false;  // Para evitar que mande el mensaje de Telegram muchas veces
+int conteoEscape = 0;           // Para contar toques válidos
+const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
 
 // Definicion de métodos
 // Setup inicial
@@ -312,17 +315,31 @@ void inicializaLittleFS() {
 }
 
 void realizarLecturas() {
-  // Lectura de sensor touch que indica que escapó la mascota
   muestraTouch = touchRead(PIN_TOUCH);
+
+  // Verificación de escape con filtro
+  if (muestraTouch >= touchTreshold) {
+    conteoEscape++;
+    if (conteoEscape >= maxIntentosEscape && !yaNotificoEscape) {
+      alertarEscape();
+      yaNotificoEscape = true;
+    }
+  } else {
+    conteoEscape = 0;
+  }
+
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
   dht_sensor.measure(&temperatura, &humedad);
+
   Serial.println("Iluminacion");
   Serial.println(iluminacion);
   Serial.println("temperatura");
   Serial.println(temperatura);
   Serial.println("humedad");
   Serial.println(humedad);
+  Serial.println("touch");
+  Serial.println(muestraTouch);
 }
 
 String obtenFecha() {
@@ -344,6 +361,8 @@ void actualizaIntensidadLuz() {
 
 void estadoOptimo() {
   estado = CONDICIONES_ADECUADAS;
+  yaNotificoEscape = false;
+  conteoEscape = 0;
   digitalWrite(PIN_LED_VERDE, HIGH);
   digitalWrite(PIN_LED_AMARILLO, LOW);
   digitalWrite(PIN_LED_ROJO, LOW);
