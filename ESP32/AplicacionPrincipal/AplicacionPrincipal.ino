@@ -12,8 +12,8 @@
 #include "DHT.h"
 
 // Conexion a internet
-const char *SSID = "ssid";
-const char *PWD = "pwd";
+const char *SSID = "IoT_ITSON";
+const char *PWD = "lv323-iot";
 
 const unsigned int BAUD_RATE = 115200;
 
@@ -40,10 +40,10 @@ const unsigned int PIN_FOT = 34;
 const unsigned int PIN_DHT = 22;
 
 // Configuración para comunicación con api de telegram
-#define BOTtoken "token"
-#define CHAT_ID "id"
+#define BOTtoken "7760131028:AAFSCf_GRd9ftPWQs4h4jYOL8FlKAbb9zmc"
+#define CHAT_ID "7829916690"
 
-#define HOST_TCP "192.168.1.71"  
+#define HOST_TCP "172.16.0.119"  
 #define PORT_TCP 5000
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
@@ -179,11 +179,14 @@ void loop() {
       Serial.print("Contador de riego: ");
       Serial.println(contador);
 
+      if (pausa.update()) {
+        contador++;
+      }
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
-        estadoOptimo();
       }
-      contador++;
+
+      if (humedad >= humedadMinima) estadoOptimo();
       break;
 
     case HUMEDAD_ALTA:

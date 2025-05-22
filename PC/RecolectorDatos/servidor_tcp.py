@@ -13,7 +13,7 @@ PORT = 5000       # Puerto por el que ESP32 enviará
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "",
+    "password": "juvito",
     "database": "Terrario"
 }
 

@@ -36,7 +36,7 @@ def enviar_config():
         messagebox.showerror("Error", "Ingresa la IP del ESP32.")
         return
 
-    url = f"http://{ip}{ENDPOINTS[sensor]}"
+    url = f"http://{ip}/{ENDPOINTS[sensor]}"
     json_data = {
         "minima": minima,
         "maxima": maxima

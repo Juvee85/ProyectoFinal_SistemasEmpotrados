@@ -2,7 +2,7 @@ let chartInstance = null;
 
 async function fetchData() {
     try {
-        const response = await fetch('http://192.168.1.82/datos');
+        const response = await fetch('http://172.16.0.167/datos');
         if (!response.ok) throw new Error('Error en la respuesta del servidor');
         return await response.json();
     } catch (error) {

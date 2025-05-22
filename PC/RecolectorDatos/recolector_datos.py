@@ -4,13 +4,13 @@ from datetime import datetime
 
 # -------------------- CONFIGURACIÓN --------------------
 
-ESP32_IP = ""  
+ESP32_IP = "http://172.16.0.167"  
 ENDPOINT = "/datos"
 
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "",
+    "password": "juvito",
     "database": "Terrario"
 }
 
