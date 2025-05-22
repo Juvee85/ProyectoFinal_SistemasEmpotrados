@@ -9,7 +9,7 @@
 #include "time.h"
 #include <Bounce2.h>
 #include <LittleFS.h>
-#include "DHT_Async.h"
+#include "DHT.h"
 
 // Conexion a internet
 const char *SSID = "INFINITUM89B1";
@@ -72,8 +72,9 @@ const int daylightOffset_sec = 0;
 struct tm timeinfo;
 
 // Configuración DHT
-#define DHT_SENSOR_TYPE DHT_TYPE_11
-DHT_Async dht_sensor(PIN_DHT, DHT_SENSOR_TYPE);
+#define DHTPIN PIN_DHT
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
 
 // Parametros de la señal PWM
 const int FRECUENCIA = 5000;
@@ -89,14 +90,14 @@ int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
 const int touchTreshold = 10000;
-float temperaturaMinima = 10;
+float temperaturaMinima = 0;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
 float humedadMaxima = 100;
 float iluminacionMinima = 0;
 float iluminacionMaxima = 240;
-bool yaNotificoEscape = false;  // Para evitar que mande el mensaje de Telegram muchas veces
-int conteoEscape = 0;           // Para contar toques válidos
+bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
+int conteoEscape = 0;             // Para contar toques válidos
 const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
 
 // Definicion de métodos
@@ -125,6 +126,7 @@ void setup() {
   iniciarConexionWifi();
   setupRutas();
   inicializaLittleFS();
+  dht.begin();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
@@ -134,7 +136,7 @@ void setup() {
   pinMode(PIN_LED_ROJO, OUTPUT);
   pinMode(PIN_BOMBA, OUTPUT);
   debouncer.attach(PIN_BOTON);
-  debouncer.interval(5);
+  debouncer.interval(15);
 
   bot.sendMessage(CHAT_ID, "Monitoreo iniciado", "");
 }
@@ -331,7 +333,9 @@ void realizarLecturas() {
 
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
-  dht_sensor.measure(&temperatura, &humedad);
+  humedad = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  temperatura = dht.readTemperature();
 
   Serial.println("Iluminacion");
   Serial.println(iluminacion);
