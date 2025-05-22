@@ -66,7 +66,7 @@ def mostrar_estadisticas():
         mensaje = ""
         for sensor, valores in datos.items():
             if sensor == "fecha":
-                mensaje += f"\n📅 Fecha: {valores}\n"
+                mensaje += f"\nFecha: {valores}\n"
                 continue
             mensaje += f"\n{sensor.upper()}:\n"
             mensaje += f"  Mínimo: {valores['minima']}\n"
