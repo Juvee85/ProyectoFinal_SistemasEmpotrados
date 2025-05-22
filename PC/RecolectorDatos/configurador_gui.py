@@ -21,7 +21,7 @@ BG_COLOR = "#1A2F1D"
 FONT_TITLE = ("Verdana", 14, "bold")
 FONT_TEXT = ("Verdana", 10)
 
-# ------------------- FUNCIÓN PRINCIPAL --------------------
+# ------------------- Funcion Envir Config --------------------
 def enviar_config():
     ip = entry_ip.get().strip()
     sensor = combo_sensor.get()
@@ -50,6 +50,8 @@ def enviar_config():
             messagebox.showerror("Error", f"Error HTTP {response.status_code}: {response.text}")
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
+
+# ------------------- Funcion Mostrar Estadisticas--------------------
 
 def mostrar_estadisticas():
     ip = entry_ip.get().strip()
@@ -81,6 +83,7 @@ def mostrar_estadisticas():
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
 
+# ------------------- Funcion Mostrar Graficas--------------------
 def mostrar_grafica():
     ip = entry_ip.get().strip()
     if not ip:
