@@ -28,7 +28,7 @@ const unsigned ADC_VALORES = 4096;
 
 // Declaración de pines
 const unsigned int PIN_LED_LAMPARA = 12;
-const unsigned int PIN_LED_ILUMINACION = 14;
+const unsigned int PIN_LED_ILUMINACION = 26;
 const unsigned int PIN_LED_VERDE = 2;
 const unsigned int PIN_LED_AMARILLO = 4;
 const unsigned int PIN_LED_ROJO = 16;
@@ -89,7 +89,7 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 20000;
+const int touchTreshold = 1;
 float temperaturaMinima = 0;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
@@ -155,8 +155,8 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
-  ledcWrite(0, cicloTrabajo);  
-  ledcWrite(1, intensidadLuz); 
+  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);  
+  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz); 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
       if (humedad < humedadMinima) alertarHumedadBaja();
@@ -353,6 +353,8 @@ void realizarLecturas() {
   Serial.println(muestraTouch);
   Serial.println("estado");
   Serial.println(estado);
+  Serial.println("intensidad");
+  Serial.println(intensidadLuz);
 }
 
 String obtenFecha() {
