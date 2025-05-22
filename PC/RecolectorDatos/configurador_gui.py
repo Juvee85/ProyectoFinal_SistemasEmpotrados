@@ -2,6 +2,9 @@ import tkinter as tk
 from tkinter import ttk, messagebox
 import requests
 from PIL import Image, ImageTk
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+
 
 # ------------------- CONFIGURACIÓN --------------------
 ENDPOINTS = {
@@ -77,6 +80,57 @@ def mostrar_estadisticas():
 
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
+
+def mostrar_grafica():
+    ip = entry_ip.get().strip()
+    if not ip:
+        messagebox.showerror("Error", "Ingresa la IP del ESP32.")
+        return
+
+    try:
+        response = requests.get(f"http://{ip}/datos")
+        data = response.json()
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
+        return
+
+    sensores = ["temperatura", "humedad", "iluminacion"]
+    labels = []
+    valores_min = []
+    valores_max = []
+    valores_actual = []
+
+    for sensor in sensores:
+        s = data.get(sensor)
+        if s:
+            labels.append(sensor.capitalize())
+            valores_min.append(s["minima"])
+            valores_max.append(s["maxima"])
+            valores_actual.append(s["actual"])
+
+    # Crear figura
+    fig, ax = plt.subplots(figsize=(6, 4))
+    ancho_barra = 0.25
+    x = range(len(labels))
+
+    ax.bar([p - ancho_barra for p in x], valores_min, width=ancho_barra, label='Mínimo')
+    ax.bar(x, valores_actual, width=ancho_barra, label='Actual')
+    ax.bar([p + ancho_barra for p in x], valores_max, width=ancho_barra, label='Máximo')
+
+    ax.set_xticks(x)
+    ax.set_xticklabels(labels)
+    ax.set_ylabel("Valor")
+    ax.set_title("Estadísticas de Sensores")
+    ax.legend()
+
+    # Mostrar en ventana emergente
+    graf_ventana = tk.Toplevel(ventana)
+    graf_ventana.title("Gráfica de Sensores")
+    graf_ventana.geometry("640x480")
+
+    canvas = FigureCanvasTkAgg(fig, master=graf_ventana)
+    canvas.draw()
+    canvas.get_tk_widget().pack(fill="both", expand=True)
 
 
 # ------------------- INTERFAZ GRÁFICA --------------------
@@ -179,13 +233,20 @@ btn_enviar = ttk.Button(main_frame,
                        text="APLICAR CONFIGURACIÓN", 
                        command=enviar_config,
                        style="TButton")
-btn_enviar.pack(pady=20, fill="x")
+btn_enviar.pack(pady=10, fill="x")
 
 btn_estadisticas = ttk.Button(main_frame, 
                        text="VER ESTADÍSTICAS",
                        command=mostrar_estadisticas,
                        style="TButton")
 btn_estadisticas.pack(pady=10, fill="x")
+
+btn_grafica = ttk.Button(main_frame,
+                         text="VER GRÁFICAS",
+                         command=mostrar_grafica,
+                         style="TButton")
+btn_grafica.pack(pady=10, fill="x")
+
 
 
 footer = tk.Frame(ventana, bg=PRIMARY_COLOR, height=30)
