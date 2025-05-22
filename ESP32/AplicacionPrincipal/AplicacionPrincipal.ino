@@ -42,6 +42,8 @@ const unsigned int PIN_DHT = 22;
 // Configuración para comunicación con api de telegram
 #define BOTtoken "token"
 #define CHAT_ID "id"
+#define HOST_TCP ""  
+#define PORT_TCP 5000
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
 
@@ -103,6 +105,7 @@ const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para act
 void setupRutas();
 void iniciarConexionWifi();
 void inicializaLittleFS();
+void enviarDatosPorTCP();
 // Cambios de estado
 void estadoOptimo();
 void alertarHumedadAlta();
@@ -117,7 +120,7 @@ void leerDatos();
 void actualizaIntensidadLuz();
 void realizarLecturas();
 String obtenFecha();
-
+noDelay pausaEnvioTCP(10000);
 void setup() {
   Serial.begin(BAUD_RATE);
   iniciarConexionWifi();
@@ -153,6 +156,11 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
+
+   if (pausaEnvioTCP.update()) {
+    enviarDatosPorTCP();
+  }
+
   ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
   ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
   switch (estado) {
@@ -452,4 +460,36 @@ void alertarEscape() {
 
 void togglePIN(unsigned int pin) {
   digitalWrite(pin, !digitalRead(pin));
+}
+
+void enviarDatosPorTCP() {
+  WiFiClient client;
+  if (!client.connect(HOST_TCP, PORT_TCP)) {
+    Serial.println("No se pudo conectar al servidor TCP");
+    return;
+  }
+
+  StaticJsonDocument<256> doc;
+
+  doc["temperatura"]["minima"] = temperaturaMinima;
+  doc["temperatura"]["maxima"] = temperaturaMaxima;
+  doc["temperatura"]["actual"] = temperatura;
+
+  doc["humedad"]["minima"] = humedadMinima;
+  doc["humedad"]["maxima"] = humedadMaxima;
+  doc["humedad"]["actual"] = humedad;
+
+  doc["iluminacion"]["minima"] = iluminacionMinima;
+  doc["iluminacion"]["maxima"] = iluminacionMaxima;
+  doc["iluminacion"]["actual"] = iluminacion;
+
+  doc["fecha"] = obtenFecha();
+
+  String salida;
+  serializeJson(doc, salida);
+
+  client.print(salida);
+  Serial.println("JSON enviado al servidor TCP:");
+  Serial.println(salida);
+  client.stop();
 }
