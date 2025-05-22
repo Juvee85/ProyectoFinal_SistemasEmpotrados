@@ -1,0 +1,11 @@
+Para arrancar el sistema de monitoreo de terrario es necesario llevar a cabo los siguientes pasos:
+
+1.- Ingresar credenciales para conexión a internet en código de ESP32
+2.- Hacer contacto con el bot de telegram a través de t.me/AlarmaMascotaBot
+3.- Ingresar token de bot y id de usuario de telegram en código de ESP32
+4.- Ejecutar script de MySQL 
+4.- Ejecutar el comando de LittleFS para cargar archivos de la página web que se proveen desde el servidor web en ESP32
+5.- Compilar el programa a ESP32 y darle energía para echarlo a andar
+6.- Ejecutar componente de recolección de datos para empezar a generar datos históricos
+7.- Ejecutar programa de control con GUI para establecer los parámetros de condiciones ideales máximos y mínimos a tolerar
+8.- Navegar hacia la página de monitoreo index.html contenida en el sistema de archivos LittleFS a través del servidor web con la dirección ip del ESP32
