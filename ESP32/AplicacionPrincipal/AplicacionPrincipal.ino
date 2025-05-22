@@ -23,21 +23,21 @@ noDelay pausaReloj(1000);
 Bounce debouncer = Bounce();
 AsyncWebServer servidor(80);
 int contador;
-// Numero de valores de salida del ADC. 2**12 = 4096
+// Numero de valores de salida del ADC
 const unsigned ADC_VALORES = 4096;
 
 // Declaración de pines
-const unsigned int PIN_LED_LAMPARA = 14;
-const unsigned int PIN_LED_ILUMINACION = 2;
+const unsigned int PIN_LED_LAMPARA = 12;
+const unsigned int PIN_LED_ILUMINACION = 14;
 const unsigned int PIN_LED_VERDE = 2;
-const unsigned int PIN_LED_AMARILLO = 2;
-const unsigned int PIN_LED_ROJO = 2;
-const unsigned int PIN_LED_A = 2;
-const unsigned int PIN_BOTON = 2;
-const unsigned int PIN_TOUCH = 4;
-const unsigned int PIN_BOMBA = 4;
-const unsigned int PIN_POT = 4;
+const unsigned int PIN_LED_AMARILLO = 4;
+const unsigned int PIN_LED_ROJO = 16;
+const unsigned int PIN_BOTON = 17;
+const unsigned int PIN_TOUCH = 32;
+const unsigned int PIN_BOMBA = 21;
+const unsigned int PIN_POT = 33;
 const unsigned int PIN_FOT = 34;
+const unsigned int PIN_DHT = 22;
 
 // Configuración para comunicación con api de telegram
 #define BOTtoken "token"
@@ -73,8 +73,7 @@ struct tm timeinfo;
 
 // Configuración DHT
 #define DHT_SENSOR_TYPE DHT_TYPE_11
-const int DHT_SENSOR_PIN = 10;
-DHT_Async dht_sensor(DHT_SENSOR_PIN, DHT_SENSOR_TYPE);
+DHT_Async dht_sensor(PIN_DHT, DHT_SENSOR_TYPE);
 
 // Parametros de la señal PWM
 const int FRECUENCIA = 5000;
@@ -90,12 +89,12 @@ int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
 const int touchTreshold = 30;
-float temperaturaMinima;
-float temperaturaMaxima;
-float humedadMinima;
-float humedadMaxima;
-float iluminacionMinima;
-float iluminacionMaxima;
+float temperaturaMinima = 10;
+float temperaturaMaxima = 40;
+float humedadMinima = 0;
+float humedadMaxima = 100;
+float iluminacionMinima = 0;
+float iluminacionMaxima = 240;
 
 // Definicion de métodos
 // Setup inicial
@@ -121,11 +120,14 @@ void setup() {
   Serial.begin(BAUD_RATE);
   estadoOptimo();
   iniciarConexionWifi();
-
-  // iniciarPines
-
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+
   ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
+  ledcAttach(PIN_LED_ILUMINACION, FRECUENCIA, RESOLUCION);
+  pinMode(PIN_LED_VERDE, OUTPUT);
+  pinMode(PIN_LED_AMARILLO, OUTPUT);
+  pinMode(PIN_LED_ROJO, OUTPUT);
+  pinMode(PIN_BOMBA, OUTPUT);
   debouncer.attach(PIN_BOTON);
   debouncer.interval(5);
 
@@ -163,6 +165,7 @@ void loop() {
     case HUMEDAD_BAJA:
       // Despues de un periodo de tiempo de riego
       if (contador == 10) {
+        digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
       }
       if (pausa.update()) {
