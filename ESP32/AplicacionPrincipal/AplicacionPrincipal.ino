@@ -288,7 +288,7 @@ void setupRutas() {
    *   "maxima": 90
    * }
    */
-AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     temperaturaMinima = jsonObj["minima"];
     temperaturaMaxima = jsonObj["maxima"];
@@ -298,7 +298,7 @@ AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJson
     request->send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
-AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     humedadMinima = jsonObj["minima"];
     humedadMaxima = jsonObj["maxima"];
@@ -308,7 +308,7 @@ AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonW
     request->send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
-AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     iluminacionMinima = jsonObj["minima"];
     iluminacionMaxima = jsonObj["maxima"];
