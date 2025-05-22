@@ -9,7 +9,7 @@
 #include "time.h"
 #include <Bounce2.h>
 #include <LittleFS.h>
-#include "DHT_Async.h"
+#include "DHT.h"
 
 // Conexion a internet
 const char *SSID = "INFINITUM89B1";
@@ -72,8 +72,9 @@ const int daylightOffset_sec = 0;
 struct tm timeinfo;
 
 // Configuración DHT
-#define DHT_SENSOR_TYPE DHT_TYPE_11
-DHT_Async dht_sensor(PIN_DHT, DHT_SENSOR_TYPE);
+#define DHTPIN PIN_DHT
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
 
 // Parametros de la señal PWM
 const int FRECUENCIA = 5000;
@@ -88,15 +89,15 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 40;
-float temperaturaMinima = 10;
+const int touchTreshold = 10000;
+float temperaturaMinima = 0;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
 float humedadMaxima = 100;
 float iluminacionMinima = 0;
 float iluminacionMaxima = 240;
-bool yaNotificoEscape = false;  // Para evitar que mande el mensaje de Telegram muchas veces
-int conteoEscape = 0;           // Para contar toques válidos
+bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
+int conteoEscape = 0;             // Para contar toques válidos
 const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
 
 // Definicion de métodos
@@ -124,7 +125,8 @@ void setup() {
   estadoOptimo();
   iniciarConexionWifi();
   setupRutas();
-  
+  inicializaLittleFS();
+  dht.begin();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
@@ -134,45 +136,30 @@ void setup() {
   pinMode(PIN_LED_ROJO, OUTPUT);
   pinMode(PIN_BOMBA, OUTPUT);
   debouncer.attach(PIN_BOTON);
-  debouncer.interval(5);
+  debouncer.interval(15);
 
   bot.sendMessage(CHAT_ID, "Monitoreo iniciado", "");
 }
 
 void loop() {
-  // ✅ Lectura del botón físico
+  // Lectura de botón para indicar que se devolvió la mascota
   debouncer.update();
   int valor = debouncer.read();
 
-  // ✅ Siempre realizar lecturas periódicas
   if (pausaLecturas.update()) {
-    realizarLecturas();  // Aquí se imprimen sensores y se verifica escape
+    realizarLecturas();
   }
 
-  // ✅ Actualizar reloj NTP cada segundo
   if (pausaReloj.update()) {
     if (!getLocalTime(&timeinfo)) {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
 
-  // ✅ Control de PWM para simular luz
+  // Simulacion de cambio de luz con un potenciometro
   ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
   ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
 
-  // ✅ Mostrar estado actual
-  Serial.print("Estado actual: ");
-  switch (estado) {
-    case CONDICIONES_ADECUADAS: Serial.println("CONDICIONES_ADECUADAS"); break;
-    case HUMEDAD_BAJA: Serial.println("HUMEDAD_BAJA"); break;
-    case HUMEDAD_ALTA: Serial.println("HUMEDAD_ALTA"); break;
-    case TEMPERATURA_INADECUADA: Serial.println("TEMPERATURA_INADECUADA"); break;
-    case ILUMINACION_ALTA: Serial.println("ILUMINACION_ALTA"); break;
-    case ILUMINACION_BAJA: Serial.println("ILUMINACION_BAJA"); break;
-    case MASCOTA_ESCAPADA: Serial.println("MASCOTA_ESCAPADA"); break;
-  }
-
-  // ✅ Verificación y transición de estados
   switch (estado) {
     case CONDICIONES_ADECUADAS:
       if (humedad < humedadMinima) alertarHumedadBaja();
@@ -182,10 +169,8 @@ void loop() {
       if (temperatura < temperaturaMinima || temperatura > temperaturaMaxima) alertarTemperatura();
       if (muestraTouch >= touchTreshold) alertarEscape();
       break;
-
     case HUMEDAD_BAJA:
-      Serial.print("Humedad: "); Serial.println(humedad);
-      Serial.print("Contador de riego: "); Serial.println(contador);
+      // Despues de un periodo de tiempo de riego
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
@@ -195,38 +180,27 @@ void loop() {
         contador++;
       }
       break;
-
     case HUMEDAD_ALTA:
-      Serial.print("Humedad: "); Serial.println(humedad);
       if (humedad <= humedadMaxima) estadoOptimo();
       break;
-
     case TEMPERATURA_INADECUADA:
-      Serial.print("Temperatura: "); Serial.println(temperatura);
       if (temperatura >= temperaturaMinima && temperatura <= temperaturaMaxima) {
         estadoOptimo();
       }
       break;
-
     case ILUMINACION_ALTA:
-      Serial.print("Iluminación: "); Serial.println(iluminacion);
       if (iluminacion <= iluminacionMaxima) estadoOptimo();
       if (cicloTrabajo >= CT_MIN) cicloTrabajo--;
       break;
-
     case ILUMINACION_BAJA:
-      Serial.print("Iluminación: "); Serial.println(iluminacion);
       if (iluminacion >= iluminacionMinima) estadoOptimo();
       if (cicloTrabajo <= CT_MAX) cicloTrabajo++;
       break;
-
     case MASCOTA_ESCAPADA:
-      Serial.println("Esperando que presiones el botón para salir del estado de escape...");
       if (valor == HIGH) estadoOptimo();
       break;
   }
 }
-
 
 // Intenta conectar a wifi e inicia el cliente seguro con certificado para llamar la api de telegram
 void iniciarConexionWifi() {
@@ -359,7 +333,9 @@ void realizarLecturas() {
 
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
-  dht_sensor.measure(&temperatura, &humedad);
+  humedad = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  temperatura = dht.readTemperature();
 
   Serial.println("Iluminacion");
   Serial.println(iluminacion);
@@ -385,6 +361,8 @@ String obtenFecha() {
 void actualizaIntensidadLuz() {
   // Lee y digitaliza el valor del voltaje en el potenciometro
   int muestra = analogRead(PIN_POT);
+  Serial.println("potenciometro");
+  Serial.println(muestra);
   intensidadLuz = map(muestra, 0, ADC_VALORES - 1, CT_MIN, CT_MAX);
 }
 
