@@ -44,7 +44,7 @@ function renderSensors(data) {
                         </div>
                         <div class="value-box">
                             <div class="value-label">Actual</div>
-                            <div class="value">${parseFloat(values.actual).toFixed(2)}${sensor.unit}</div>
+                            <div class="value">${values.actual}${sensor.unit}</div>
                         </div>
                     </div>
 
