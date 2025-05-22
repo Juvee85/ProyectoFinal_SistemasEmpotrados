@@ -124,6 +124,7 @@ void setup() {
   estadoOptimo();
   iniciarConexionWifi();
   setupRutas();
+  inicializaLittleFS();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
@@ -160,7 +161,7 @@ void loop() {
   switch (estado) {
     case CONDICIONES_ADECUADAS:
       if (humedad < humedadMinima) alertarHumedadBaja();
-      if (humedad > humedadMaxima) alertarHumedadBaja();
+      if (humedad > humedadMaxima) alertarHumedadAlta();
       if (iluminacion < iluminacionMinima) alertarIluminacionBaja();
       if (iluminacion > iluminacionMaxima) alertarIluminacionAlta();
       if (temperatura < temperaturaMinima || temperatura > temperaturaMaxima) alertarTemperatura();
