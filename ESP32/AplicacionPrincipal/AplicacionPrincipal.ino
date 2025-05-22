@@ -129,11 +129,8 @@ void setup() {
   dht.begin();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-ledcSetup(0, FRECUENCIA, RESOLUCION); 
-ledcAttachPin(PIN_LED_ILUMINACION, 0);
-
-ledcSetup(1, FRECUENCIA, RESOLUCION);  
-ledcAttachPin(PIN_LED_LAMPARA, 1);
+  ledcAttachChannel(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION, 0);
+  ledcAttachChannel(PIN_LED_ILUMINACION, FRECUENCIA, RESOLUCION, 1);
 
   pinMode(PIN_LED_VERDE, OUTPUT);
   pinMode(PIN_LED_AMARILLO, OUTPUT);
@@ -150,7 +147,7 @@ void loop() {
   int valor = debouncer.read();
 
   if (pausaLecturas.update()) {
-    realizarLecturas();  
+    realizarLecturas();
   }
 
   if (pausaReloj.update()) {
@@ -158,8 +155,8 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
-  ledcWrite(0, intensidadLuz);   
-  ledcWrite(1, cicloTrabajo);    
+  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
+  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
@@ -172,8 +169,10 @@ void loop() {
       break;
 
     case HUMEDAD_BAJA:
-      Serial.print("Humedad: "); Serial.println(humedad);
-      Serial.print("Contador de riego: "); Serial.println(contador);
+      Serial.print("Humedad: ");
+      Serial.println(humedad);
+      Serial.print("Contador de riego: ");
+      Serial.println(contador);
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
@@ -185,25 +184,29 @@ void loop() {
       break;
 
     case HUMEDAD_ALTA:
-      Serial.print("Humedad: "); Serial.println(humedad);
+      Serial.print("Humedad: ");
+      Serial.println(humedad);
       if (humedad <= humedadMaxima) estadoOptimo();
       break;
 
     case TEMPERATURA_INADECUADA:
-      Serial.print("Temperatura: "); Serial.println(temperatura);
+      Serial.print("Temperatura: ");
+      Serial.println(temperatura);
       if (temperatura >= temperaturaMinima && temperatura <= temperaturaMaxima) {
         estadoOptimo();
       }
       break;
 
     case ILUMINACION_ALTA:
-      Serial.print("Iluminación: "); Serial.println(iluminacion);
+      Serial.print("Iluminación: ");
+      Serial.println(iluminacion);
       if (iluminacion <= iluminacionMaxima) estadoOptimo();
       if (cicloTrabajo >= CT_MIN) cicloTrabajo--;
       break;
 
     case ILUMINACION_BAJA:
-      Serial.print("Iluminación: "); Serial.println(iluminacion);
+      Serial.print("Iluminación: ");
+      Serial.println(iluminacion);
       if (iluminacion >= iluminacionMinima) estadoOptimo();
       if (cicloTrabajo <= CT_MAX) cicloTrabajo++;
       break;
