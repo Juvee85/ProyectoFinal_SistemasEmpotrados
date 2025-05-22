@@ -27,7 +27,7 @@ int contador;
 const unsigned ADC_VALORES = 4096;
 
 // Declaración de pines
-const unsigned int PIN_LED_LAMPARA = 12;
+const unsigned int PIN_LED_LAMPARA = 27;
 const unsigned int PIN_LED_ILUMINACION = 26;
 const unsigned int PIN_LED_VERDE = 2;
 const unsigned int PIN_LED_AMARILLO = 4;
@@ -64,11 +64,9 @@ char buffer[250];
 
 // Configuración NTP
 const char *ntpServer = "pool.ntp.org";
-// Offset en segundos de la zona horaria local con respecto a GMT
-const long gmtOffset_sec = -25200;  // -7*3600
-// Offset en segundos del tiempo, en el caso de horario de verano
+const long gmtOffset_sec = -25200;
 const int daylightOffset_sec = 0;
-// Estructura con la informacion de la fecha/hora actual
+
 struct tm timeinfo;
 
 // Configuración DHT
@@ -90,12 +88,12 @@ int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
 const int touchTreshold = 1;
-float temperaturaMinima = 0;
-float temperaturaMaxima = 40;
-float humedadMinima = 0;
-float humedadMaxima = 100;
+float temperaturaMinima = 17;
+float temperaturaMaxima = 29;
+float humedadMinima = 50;
+float humedadMaxima = 80;
 float iluminacionMinima = 0;
-float iluminacionMaxima = 1500;
+float iluminacionMaxima = 1100;
 bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
 int conteoEscape = 0;             // Para contar toques válidos
 const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
@@ -122,7 +120,6 @@ String obtenFecha();
 
 void setup() {
   Serial.begin(BAUD_RATE);
-  estadoOptimo();
   iniciarConexionWifi();
   setupRutas();
   inicializaLittleFS();
@@ -139,6 +136,7 @@ void setup() {
   debouncer.attach(PIN_BOTON);
   debouncer.interval(15);
 
+  estadoOptimo();
   bot.sendMessage(CHAT_ID, "Monitoreo iniciado", "");
 }
 
@@ -155,8 +153,8 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
-  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);  
-  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz); 
+  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
+  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
   switch (estado) {
     case CONDICIONES_ADECUADAS:
       if (humedad < humedadMinima) alertarHumedadBaja();
@@ -172,13 +170,10 @@ void loop() {
       Serial.println(humedad);
       Serial.print("Contador de riego: ");
       Serial.println(contador);
+      digitalWrite(PIN_BOMBA, HIGH);
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
-      }
-      if (pausa.update()) {
-        togglePIN(PIN_BOMBA);
-        contador++;
       }
       break;
 
