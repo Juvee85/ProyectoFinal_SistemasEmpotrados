@@ -89,7 +89,7 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 10000;
+const int touchTreshold = 50;
 float temperaturaMinima = 0;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
@@ -129,8 +129,12 @@ void setup() {
   dht.begin();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
-  ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
-  ledcAttach(PIN_LED_ILUMINACION, FRECUENCIA, RESOLUCION);
+ledcSetup(0, FRECUENCIA, RESOLUCION); 
+ledcAttachPin(PIN_LED_ILUMINACION, 0);
+
+ledcSetup(1, FRECUENCIA, RESOLUCION);  
+ledcAttachPin(PIN_LED_LAMPARA, 1);
+
   pinMode(PIN_LED_VERDE, OUTPUT);
   pinMode(PIN_LED_AMARILLO, OUTPUT);
   pinMode(PIN_LED_ROJO, OUTPUT);
@@ -154,11 +158,8 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
-
-  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
-  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
-
-  
+  ledcWrite(0, intensidadLuz);   
+  ledcWrite(1, cicloTrabajo);    
 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
@@ -334,7 +335,7 @@ void realizarLecturas() {
   muestraTouch = touchRead(PIN_TOUCH);
 
   // Verificación de escape con filtro
-  if (muestraTouch >= touchTreshold) {
+  if (muestraTouch <= touchTreshold) {
     conteoEscape++;
     if (conteoEscape >= maxIntentosEscape && !yaNotificoEscape) {
       alertarEscape();
