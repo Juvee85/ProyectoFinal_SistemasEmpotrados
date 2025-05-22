@@ -87,12 +87,12 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 1;
+const int touchTreshold = 12;
 float temperaturaMinima = 17;
 float temperaturaMaxima = 29;
 float humedadMinima = 50;
 float humedadMaxima = 80;
-float iluminacionMinima = 0;
+float iluminacionMinima = 200;
 float iluminacionMaxima = 1100;
 bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
 int conteoEscape = 0;             // Para contar toques válidos
@@ -170,11 +170,12 @@ void loop() {
       Serial.println(humedad);
       Serial.print("Contador de riego: ");
       Serial.println(contador);
-      digitalWrite(PIN_BOMBA, HIGH);
+
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
       }
+      contador++;
       break;
 
     case HUMEDAD_ALTA:
@@ -291,18 +292,30 @@ void setupRutas() {
     JsonObject jsonObj = json.as<JsonObject>();
     temperaturaMinima = jsonObj["minima"];
     temperaturaMaxima = jsonObj["maxima"];
+    Serial.println("POST temperatura recibido:");
+    Serial.println(temperaturaMinima);
+    Serial.println(temperaturaMaxima);
+    request->send(200, "application/json", "{\" status \":\" ok \"}");
   });
 
   AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     humedadMinima = jsonObj["minima"];
     humedadMaxima = jsonObj["maxima"];
+    Serial.println("POST temperatura recibido:");
+    Serial.println(humedadMinima);
+    Serial.println(humedadMaxima);
+    request->send(200, "application/json", "{\" status \":\" ok \"}");
   });
 
   AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     iluminacionMinima = jsonObj["minima"];
     iluminacionMaxima = jsonObj["maxima"];
+    Serial.println("POST temperatura recibido:");
+    Serial.println(iluminacionMinima);
+    Serial.println(iluminacionMaxima);
+    request->send(200, "application/json", "{\" status \":\" ok \"}");
   });
   servidor.addHandler(handlerEstablecerTempMinMax);
   servidor.addHandler(handlerEstablecerHumMinMax);
@@ -394,6 +407,7 @@ void alertarHumedadBaja() {
   pausa.setdelay(500);
   pausa.start();
   contador = 0;
+  digitalWrite(PIN_BOMBA, HIGH);
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, HIGH);
   digitalWrite(PIN_LED_ROJO, LOW);
