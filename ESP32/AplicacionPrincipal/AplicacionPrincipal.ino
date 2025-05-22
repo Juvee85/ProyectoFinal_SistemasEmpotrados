@@ -289,14 +289,22 @@ void setupRutas() {
    * }
    */
 AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", [](AsyncWebServerRequest *request, JsonVariant &json) {
-    JsonObject jsonObj = json.as<JsonObject>();
+  Serial.println("JSON recibido:");
+  serializeJson(json, Serial); 
+  Serial.println();
+
+  JsonObject jsonObj = json.as<JsonObject>();
+
+  if (jsonObj.containsKey("minima") && jsonObj.containsKey("maxima")) {
     temperaturaMinima = jsonObj["minima"];
     temperaturaMaxima = jsonObj["maxima"];
-    Serial.println("POST temperatura recibido:");
-    Serial.println(temperaturaMinima);
-    Serial.println(temperaturaMaxima);
-    request->send(200, "application/json", "{\"status\":\"ok\"}");
-  });
+    Serial.println("Valores actualizados");
+  } else {
+    Serial.println("JSON inválido. No contiene 'minima' o 'maxima'");
+  }
+
+  request->send(200, "application/json", "{\"status\":\"ok\"}");
+});
 
 AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
