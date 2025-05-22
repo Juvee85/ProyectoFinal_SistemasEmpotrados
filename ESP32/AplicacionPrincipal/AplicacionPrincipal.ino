@@ -155,9 +155,8 @@ void loop() {
       Serial.println("No se pudo obtener la fecha/hora");
     }
   }
-  ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
-  ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
-
+  ledcWrite(0, cicloTrabajo);  
+  ledcWrite(1, intensidadLuz); 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
       if (humedad < humedadMinima) alertarHumedadBaja();
