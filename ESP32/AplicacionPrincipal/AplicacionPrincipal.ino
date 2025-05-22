@@ -42,7 +42,7 @@ const unsigned int PIN_DHT = 22;
 // Configuración para comunicación con api de telegram
 #define BOTtoken "token"
 #define CHAT_ID "id"
-#define HOST_TCP ""  
+#define HOST_TCP "192.168.1.71"  
 #define PORT_TCP 5000
 WiFiClientSecure client;
 UniversalTelegramBot bot(BOTtoken, client);
