@@ -288,34 +288,34 @@ void setupRutas() {
    *   "maxima": 90
    * }
    */
-  AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     temperaturaMinima = jsonObj["minima"];
     temperaturaMaxima = jsonObj["maxima"];
     Serial.println("POST temperatura recibido:");
     Serial.println(temperaturaMinima);
     Serial.println(temperaturaMaxima);
-    request->send(200, "application/json", "{\" status \":\" ok \"}");
+    request->send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
-  AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     humedadMinima = jsonObj["minima"];
     humedadMaxima = jsonObj["maxima"];
     Serial.println("POST temperatura recibido:");
     Serial.println(humedadMinima);
     Serial.println(humedadMaxima);
-    request->send(200, "application/json", "{\" status \":\" ok \"}");
+    request->send(200, "application/json", "{\"status\":\"ok\"}");
   });
 
-  AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", [](AsyncWebServerRequest *request, JsonVariant &json) {
+AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", HTTP_POST, [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     iluminacionMinima = jsonObj["minima"];
     iluminacionMaxima = jsonObj["maxima"];
     Serial.println("POST temperatura recibido:");
     Serial.println(iluminacionMinima);
     Serial.println(iluminacionMaxima);
-    request->send(200, "application/json", "{\" status \":\" ok \"}");
+    request->send(200, "application/json", "{\"status\":\"ok\"}");
   });
   servidor.addHandler(handlerEstablecerTempMinMax);
   servidor.addHandler(handlerEstablecerHumMinMax);
