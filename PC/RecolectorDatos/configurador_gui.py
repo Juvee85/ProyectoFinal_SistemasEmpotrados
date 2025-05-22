@@ -48,20 +48,51 @@ def enviar_config():
     except Exception as e:
         messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
 
+def mostrar_estadisticas():
+    ip = entry_ip.get().strip()
+    if not ip:
+        messagebox.showerror("Error", "Ingresa la IP del ESP32.")
+        return
+
+    url = f"http://{ip}/datos"
+    try:
+        response = requests.get(url)
+        if response.status_code != 200:
+            messagebox.showerror("Error", f"Error HTTP {response.status_code}")
+            return
+
+        datos = response.json()
+
+        mensaje = ""
+        for sensor, valores in datos.items():
+            if sensor == "fecha":
+                mensaje += f"\n📅 Fecha: {valores}\n"
+                continue
+            mensaje += f"\n{sensor.upper()}:\n"
+            mensaje += f"  Mínimo: {valores['minima']}\n"
+            mensaje += f"  Máximo: {valores['maxima']}\n"
+            mensaje += f"  Actual: {valores['actual']}\n"
+
+        messagebox.showinfo("Estadísticas Actuales", mensaje)
+
+    except Exception as e:
+        messagebox.showerror("Error", f"No se pudo conectar al ESP32:\n{e}")
+
+
 # ------------------- INTERFAZ GRÁFICA --------------------
 ventana = tk.Tk()
 ventana.title("Administrador de Terrario")
-ventana.geometry("500x600")
+ventana.geometry("500x650")
 ventana.configure(bg=BG_COLOR)
 ventana.resizable(False, False)
 
-# Cargar imágenes decorativas
+# Imagen
 try:
     img_plants = ImageTk.PhotoImage(Image.open("imagen/huella.png").resize((100, 100)))  # Reemplaza por tu imagen real
 except:
     img_plants = None
 
-# Encabezado
+
 header = tk.Frame(ventana, bg=PRIMARY_COLOR, height=100)
 header.pack(fill="x")
 
@@ -79,7 +110,7 @@ title_label.pack(side="left", pady=20)
 main_frame = tk.Canvas(ventana, bg=BG_COLOR, highlightthickness=0)
 main_frame.pack(pady=20, padx=20, fill="both", expand=True)
 
-# Sección IP
+# IP
 config_frame = tk.Frame(main_frame, bg=SECONDARY_COLOR, bd=2, relief="groove")
 config_frame.pack(pady=10, padx=10, fill="x")
 
@@ -92,7 +123,7 @@ tk.Label(config_frame,
 entry_ip = ttk.Entry(config_frame, width=25, font=FONT_TEXT)
 entry_ip.pack(pady=5, padx=10, fill="x")
 
-# Selección de parámetro
+# Parametro
 param_frame = tk.Frame(main_frame, bg=BG_COLOR)
 param_frame.pack(pady=15, fill="x")
 
@@ -109,7 +140,7 @@ combo_sensor = ttk.Combobox(param_frame,
 combo_sensor.set("Temperatura")
 combo_sensor.pack(pady=5, fill="x")
 
-# Valores de umbral
+# Valores
 umbral_frame = tk.Frame(main_frame, bg=SECONDARY_COLOR, bd=2, relief="groove")
 umbral_frame.pack(pady=15, fill="x")
 
@@ -135,7 +166,7 @@ tk.Label(umbral_frame,
 entry_max = ttk.Entry(umbral_frame, font=FONT_TEXT)
 entry_max.pack(pady=5, padx=10, fill="x")
 
-# Botón de acción
+# Botones
 btn_style = ttk.Style()
 btn_style.configure("TButton", 
                    font=FONT_TEXT,
@@ -150,7 +181,13 @@ btn_enviar = ttk.Button(main_frame,
                        style="TButton")
 btn_enviar.pack(pady=20, fill="x")
 
-# Pie de página
+btn_estadisticas = ttk.Button(main_frame, 
+                       text="VER ESTADÍSTICAS",
+                       command=mostrar_estadisticas,
+                       style="TButton")
+btn_estadisticas.pack(pady=10, fill="x")
+
+
 footer = tk.Frame(ventana, bg=PRIMARY_COLOR, height=30)
 footer.pack(side="bottom", fill="x")
 
