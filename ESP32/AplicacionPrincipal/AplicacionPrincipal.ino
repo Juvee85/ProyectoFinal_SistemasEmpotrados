@@ -142,12 +142,11 @@ void setup() {
 }
 
 void loop() {
-  // Lectura de botón para indicar que se devolvió la mascota
   debouncer.update();
   int valor = debouncer.read();
 
   if (pausaLecturas.update()) {
-    realizarLecturas();
+    realizarLecturas();  
   }
 
   if (pausaReloj.update()) {
@@ -156,9 +155,19 @@ void loop() {
     }
   }
 
-  // Simulacion de cambio de luz con un potenciometro
   ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
   ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
+
+  Serial.print("Estado actual: ");
+  switch (estado) {
+    case CONDICIONES_ADECUADAS: Serial.println("CONDICIONES_ADECUADAS"); break;
+    case HUMEDAD_BAJA: Serial.println("HUMEDAD_BAJA"); break;
+    case HUMEDAD_ALTA: Serial.println("HUMEDAD_ALTA"); break;
+    case TEMPERATURA_INADECUADA: Serial.println("TEMPERATURA_INADECUADA"); break;
+    case ILUMINACION_ALTA: Serial.println("ILUMINACION_ALTA"); break;
+    case ILUMINACION_BAJA: Serial.println("ILUMINACION_BAJA"); break;
+    case MASCOTA_ESCAPADA: Serial.println("MASCOTA_ESCAPADA"); break;
+  }
 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
@@ -169,8 +178,10 @@ void loop() {
       if (temperatura < temperaturaMinima || temperatura > temperaturaMaxima) alertarTemperatura();
       if (muestraTouch >= touchTreshold) alertarEscape();
       break;
+
     case HUMEDAD_BAJA:
-      // Despues de un periodo de tiempo de riego
+      Serial.print("Humedad: "); Serial.println(humedad);
+      Serial.print("Contador de riego: "); Serial.println(contador);
       if (contador == 10) {
         digitalWrite(PIN_BOMBA, LOW);
         estadoOptimo();
@@ -180,27 +191,38 @@ void loop() {
         contador++;
       }
       break;
+
     case HUMEDAD_ALTA:
+      Serial.print("Humedad: "); Serial.println(humedad);
       if (humedad <= humedadMaxima) estadoOptimo();
       break;
+
     case TEMPERATURA_INADECUADA:
+      Serial.print("Temperatura: "); Serial.println(temperatura);
       if (temperatura >= temperaturaMinima && temperatura <= temperaturaMaxima) {
         estadoOptimo();
       }
       break;
+
     case ILUMINACION_ALTA:
+      Serial.print("Iluminación: "); Serial.println(iluminacion);
       if (iluminacion <= iluminacionMaxima) estadoOptimo();
       if (cicloTrabajo >= CT_MIN) cicloTrabajo--;
       break;
+
     case ILUMINACION_BAJA:
+      Serial.print("Iluminación: "); Serial.println(iluminacion);
       if (iluminacion >= iluminacionMinima) estadoOptimo();
       if (cicloTrabajo <= CT_MAX) cicloTrabajo++;
       break;
+
     case MASCOTA_ESCAPADA:
+      Serial.println("Esperando que presiones el botón para salir del estado de escape...");
       if (valor == HIGH) estadoOptimo();
       break;
   }
 }
+
 
 // Intenta conectar a wifi e inicia el cliente seguro con certificado para llamar la api de telegram
 void iniciarConexionWifi() {
