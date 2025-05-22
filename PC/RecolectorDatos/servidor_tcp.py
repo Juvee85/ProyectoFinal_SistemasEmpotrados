@@ -2,6 +2,13 @@ import socket
 import json
 import mysql.connector
 from datetime import datetime
+import csv
+import os
+
+# ---------------- CONFIGURACIÓN ----------------
+
+HOST = "0.0.0.0"  # Escucha en todas las interfaces de red
+PORT = 5000       # Puerto por el que ESP32 enviará
 
 DB_CONFIG = {
     "host": "localhost",
@@ -10,10 +17,11 @@ DB_CONFIG = {
     "database": "Terrario"
 }
 
-HOST = ""  # IP
-PORT = 5000
+CSV_FILE = "respaldo_tcp.csv"
 
-def guardar_datos(data):
+# ---------------- FUNCIONES ----------------
+
+def guardar_en_mysql(data):
     fecha = data.get("fecha", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
     sensores = ["temperatura", "humedad", "iluminacion"]
 
@@ -38,7 +46,25 @@ def guardar_datos(data):
     conn.commit()
     cursor.close()
     conn.close()
-    print("Datos guardados")
+    print("Datos guardados en MySQL")
+
+
+def guardar_en_csv(data):
+    sensores = ["temperatura", "humedad", "iluminacion"]
+    fecha = data.get("fecha", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+
+    archivo_nuevo = not os.path.exists(CSV_FILE)
+    with open(CSV_FILE, mode='a', newline='') as file:
+        writer = csv.writer(file)
+        if archivo_nuevo:
+            writer.writerow(["fecha", "sensor", "minima", "maxima", "actual"])
+
+        for sensor in sensores:
+            valores = data[sensor]
+            writer.writerow([fecha, sensor, valores["minima"], valores["maxima"], valores["actual"]])
+
+    print("Datos respaldados en CSV")
+
 
 def iniciar_servidor():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -49,13 +75,17 @@ def iniciar_servidor():
         while True:
             conn, addr = s.accept()
             with conn:
-                print(f"Conexión desde {addr}")
-                data = conn.recv(2048).decode('utf-8')
+                print(f"\nConexión desde {addr}")
                 try:
-                    json_data = json.loads(data)
-                    guardar_datos(json_data)
+                    buffer = conn.recv(2048).decode("utf-8")
+                    print("Recibido:", buffer)
+                    json_data = json.loads(buffer)
+                    guardar_en_mysql(json_data)
+                    guardar_en_csv(json_data)
                 except Exception as e:
                     print("Error al procesar datos:", e)
+
+# ---------------- EJECUCION ----------------
 
 if __name__ == "__main__":
     iniciar_servidor()
