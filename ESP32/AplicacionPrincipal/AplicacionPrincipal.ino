@@ -12,8 +12,8 @@
 #include "DHT.h"
 
 // Conexion a internet
-const char *SSID = "INFINITUM89B1";
-const char *PWD = "FE7AKvWFFz";
+const char *SSID = "ssid";
+const char *PWD = "pwd";
 
 const unsigned int BAUD_RATE = 115200;
 
@@ -42,6 +42,7 @@ const unsigned int PIN_DHT = 22;
 // Configuración para comunicación con api de telegram
 #define BOTtoken "token"
 #define CHAT_ID "id"
+
 #define HOST_TCP "192.168.1.71"  
 #define PORT_TCP 5000
 WiFiClientSecure client;
@@ -89,13 +90,13 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 12;
-float temperaturaMinima = 17;
-float temperaturaMaxima = 29;
-float humedadMinima = 50;
+const int touchTreshold = 15;
+float temperaturaMinima = 15;
+float temperaturaMaxima = 40;
+float humedadMinima = 20;
 float humedadMaxima = 80;
-float iluminacionMinima = 200;
-float iluminacionMaxima = 1100;
+float iluminacionMinima = 150;
+float iluminacionMaxima = 1400;
 bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
 int conteoEscape = 0;             // Para contar toques válidos
 const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
@@ -115,7 +116,6 @@ void alertarIluminacionAlta();
 void alertarIluminacionBaja();
 void alertarEscape();
 void leerDatos();
-// Manejo de peticiones
 // Leecturas
 void actualizaIntensidadLuz();
 void realizarLecturas();
