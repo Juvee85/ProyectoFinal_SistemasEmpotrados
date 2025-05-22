@@ -16,9 +16,9 @@ function renderSensors(data) {
     container.innerHTML = '';
 
     const sensors = [
-        { type: 'temperature', icon: 'fa-thermometer-half', label: 'Temperatura', unit: '°C' },
-        { type: 'humidity', icon: 'fa-tint', label: 'Humedad', unit: '%' },
-        { type: 'illuminance', icon: 'fa-sun', label: 'Iluminación', unit: 'lux' }
+        { type: 'temperatura', icon: 'fa-thermometer-half', label: 'Temperatura', unit: '°C' },
+        { type: 'humedad', icon: 'fa-tint', label: 'Humedad', unit: '%' },
+        { type: 'iluminacion', icon: 'fa-sun', label: 'Iluminación', unit: 'lux' }
     ];
 
     sensors.forEach(sensor => {
