@@ -12,8 +12,8 @@
 #include "DHT_Async.h"
 
 // Conexion a internet
-const char *SSID = "ssid";
-const char *PWD = "pass";
+const char *SSID = "INFINITUM89B1";
+const char *PWD = "FE7AKvWFFz";
 
 const unsigned int BAUD_RATE = 115200;
 
@@ -88,7 +88,7 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 30;
+const int touchTreshold = 40;
 float temperaturaMinima = 10;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
@@ -120,6 +120,7 @@ void setup() {
   Serial.begin(BAUD_RATE);
   estadoOptimo();
   iniciarConexionWifi();
+  setupRutas();
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
   ledcAttach(PIN_LED_LAMPARA, FRECUENCIA, RESOLUCION);
@@ -281,19 +282,19 @@ void setupRutas() {
   AsyncCallbackJsonWebHandler *handlerEstablecerTempMinMax = new AsyncCallbackJsonWebHandler("/establecer/temperatura", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     temperaturaMinima = jsonObj["minima"];
-    temperaturaMaxima = jsonObj["minima"];
+    temperaturaMaxima = jsonObj["maxima"];
   });
 
   AsyncCallbackJsonWebHandler *handlerEstablecerHumMinMax = new AsyncCallbackJsonWebHandler("/establecer/humedad", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     humedadMinima = jsonObj["minima"];
-    humedadMaxima = jsonObj["minima"];
+    humedadMaxima = jsonObj["maxima"];
   });
 
   AsyncCallbackJsonWebHandler *handlerEstablecerIluminacionMinMax = new AsyncCallbackJsonWebHandler("/establecer/iluminacion", [](AsyncWebServerRequest *request, JsonVariant &json) {
     JsonObject jsonObj = json.as<JsonObject>();
     iluminacionMinima = jsonObj["minima"];
-    iluminacionMaxima = jsonObj["minima"];
+    iluminacionMaxima = jsonObj["maxima"];
   });
   servidor.addHandler(handlerEstablecerTempMinMax);
   servidor.addHandler(handlerEstablecerHumMinMax);
@@ -316,8 +317,12 @@ void realizarLecturas() {
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
   dht_sensor.measure(&temperatura, &humedad);
-  Serial.print("Iluminacion");
-  Serial.print(iluminacion);
+  Serial.println("Iluminacion");
+  Serial.println(iluminacion);
+  Serial.println("temperatura");
+  Serial.println(temperatura);
+  Serial.println("humedad");
+  Serial.println(humedad);
 }
 
 String obtenFecha() {
@@ -338,12 +343,14 @@ void actualizaIntensidadLuz() {
 }
 
 void estadoOptimo() {
+  estado = CONDICIONES_ADECUADAS;
   digitalWrite(PIN_LED_VERDE, HIGH);
   digitalWrite(PIN_LED_AMARILLO, LOW);
   digitalWrite(PIN_LED_ROJO, LOW);
 }
 
 void alertarHumedadAlta() {
+  estado = HUMEDAD_ALTA;
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, HIGH);
   digitalWrite(PIN_LED_ROJO, LOW);
@@ -351,6 +358,7 @@ void alertarHumedadAlta() {
 
 void alertarHumedadBaja() {
   // Inicia temporizador para despliegue de agua
+  estado = HUMEDAD_BAJA;
   pausa.setdelay(500);
   pausa.start();
   contador = 0;
@@ -360,24 +368,28 @@ void alertarHumedadBaja() {
 }
 
 void alertarTemperatura() {
+  estado = TEMPERATURA_INADECUADA;
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, HIGH);
   digitalWrite(PIN_LED_ROJO, LOW);
 }
 
 void alertarIluminacionAlta() {
+  estado = ILUMINACION_ALTA;
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, HIGH);
   digitalWrite(PIN_LED_ROJO, LOW);
 }
 
 void alertarIluminacionBaja() {
+  estado = ILUMINACION_BAJA;
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, HIGH);
   digitalWrite(PIN_LED_ROJO, LOW);
 }
 
 void alertarEscape() {
+  estado = MASCOTA_ESCAPADA;
   digitalWrite(PIN_LED_VERDE, LOW);
   digitalWrite(PIN_LED_AMARILLO, LOW);
   digitalWrite(PIN_LED_ROJO, HIGH);
