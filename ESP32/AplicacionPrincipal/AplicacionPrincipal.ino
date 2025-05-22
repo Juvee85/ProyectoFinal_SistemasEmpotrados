@@ -88,7 +88,7 @@ int iluminacion;
 int intensidadLuz;
 int cicloTrabajo = 0;
 int muestraTouch;
-const int touchTreshold = 40;
+const int touchTreshold = 10000;
 float temperaturaMinima = 10;
 float temperaturaMaxima = 40;
 float humedadMinima = 0;
@@ -356,6 +356,8 @@ String obtenFecha() {
 void actualizaIntensidadLuz() {
   // Lee y digitaliza el valor del voltaje en el potenciometro
   int muestra = analogRead(PIN_POT);
+  Serial.println("potenciometro");
+  Serial.println(muestra);
   intensidadLuz = map(muestra, 0, ADC_VALORES - 1, CT_MIN, CT_MAX);
 }
 
