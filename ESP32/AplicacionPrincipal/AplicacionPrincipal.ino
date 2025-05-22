@@ -335,6 +335,7 @@ void realizarLecturas() {
 
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
+  cicloTrabajo = map(iluminacion, 0, ADC_VALORES - 1, CT_MAX, CT_MIN);
   humedad = dht.readHumidity();
   temperatura = dht.readTemperature();
 
