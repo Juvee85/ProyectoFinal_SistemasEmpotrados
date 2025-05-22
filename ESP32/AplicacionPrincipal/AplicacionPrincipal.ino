@@ -18,7 +18,7 @@ const char *PWD = "FE7AKvWFFz";
 const unsigned int BAUD_RATE = 115200;
 
 noDelay pausa(0);
-noDelay pausaLecturas(100);
+noDelay pausaLecturas(1500);
 noDelay pausaReloj(1000);
 Bounce debouncer = Bounce();
 AsyncWebServer servidor(80);
@@ -95,7 +95,7 @@ float temperaturaMaxima = 40;
 float humedadMinima = 0;
 float humedadMaxima = 100;
 float iluminacionMinima = 0;
-float iluminacionMaxima = 240;
+float iluminacionMaxima = 1500;
 bool yaNotificoEscape = false;    // Para evitar que mande el mensaje de Telegram muchas veces
 int conteoEscape = 0;             // Para contar toques válidos
 const int maxIntentosEscape = 3;  // Cuántas veces debe detectar toque para activarse
@@ -158,16 +158,7 @@ void loop() {
   ledcWrite(PIN_LED_LAMPARA, cicloTrabajo);
   ledcWrite(PIN_LED_ILUMINACION, intensidadLuz);
 
-  Serial.print("Estado actual: ");
-  switch (estado) {
-    case CONDICIONES_ADECUADAS: Serial.println("CONDICIONES_ADECUADAS"); break;
-    case HUMEDAD_BAJA: Serial.println("HUMEDAD_BAJA"); break;
-    case HUMEDAD_ALTA: Serial.println("HUMEDAD_ALTA"); break;
-    case TEMPERATURA_INADECUADA: Serial.println("TEMPERATURA_INADECUADA"); break;
-    case ILUMINACION_ALTA: Serial.println("ILUMINACION_ALTA"); break;
-    case ILUMINACION_BAJA: Serial.println("ILUMINACION_BAJA"); break;
-    case MASCOTA_ESCAPADA: Serial.println("MASCOTA_ESCAPADA"); break;
-  }
+  
 
   switch (estado) {
     case CONDICIONES_ADECUADAS:
@@ -356,7 +347,6 @@ void realizarLecturas() {
   actualizaIntensidadLuz();
   iluminacion = analogRead(PIN_FOT);
   humedad = dht.readHumidity();
-  // Read temperature as Celsius (the default)
   temperatura = dht.readTemperature();
 
   Serial.println("Iluminacion");
@@ -367,6 +357,8 @@ void realizarLecturas() {
   Serial.println(humedad);
   Serial.println("touch");
   Serial.println(muestraTouch);
+  Serial.println("estado");
+  Serial.println(estado);
 }
 
 String obtenFecha() {
