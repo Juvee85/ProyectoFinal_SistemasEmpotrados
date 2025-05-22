@@ -1,0 +1,176 @@
+ :root {
+     --primary-color: #2A4D3A;
+     --secondary-color: #5B8C5A;
+     --accent-color: #C4D6B0;
+     --background: #F5F9FC;
+     --text-dark: #2D3748;
+     --text-light: #718096;
+ }
+
+ * {
+     box-sizing: border-box;
+     margin: 0;
+     padding: 0;
+ }
+
+ body {
+     font-family: 'Poppins', sans-serif;
+     background: var(--background);
+     color: var(--text-dark);
+     min-height: 100vh;
+     padding: 2rem;
+ }
+
+ .container {
+     max-width: 1200px;
+     margin: 0 auto;
+ }
+
+ .header {
+     text-align: center;
+     margin-bottom: 3rem;
+     position: relative;
+ }
+
+ .title {
+     color: var(--primary-color);
+     font-size: 2.5rem;
+     margin-bottom: 0.5rem;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     gap: 0.5rem;
+ }
+
+ .status-grid {
+     display: grid;
+     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+     gap: 2rem;
+     margin-bottom: 3rem;
+ }
+
+ .sensor-card {
+     background: white;
+     border-radius: 1rem;
+     padding: 1.5rem;
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+     transition: transform 0.3s ease;
+     position: relative;
+     overflow: hidden;
+ }
+
+ .sensor-card:hover {
+     transform: translateY(-5px);
+ }
+
+ .sensor-header {
+     display: flex;
+     align-items: center;
+     margin-bottom: 1.5rem;
+ }
+
+ .sensor-icon {
+     width: 3rem;
+     height: 3rem;
+     border-radius: 0.75rem;
+     display: flex;
+     align-items: center;
+     justify-content: center;
+     margin-right: 1rem;
+ }
+
+ .temperature {
+     background: #FEE2E2;
+     color: #DC2626;
+ }
+
+ .humidity {
+     background: #DBEAFE;
+     color: #2563EB;
+ }
+
+ .light {
+     background: #FEF3C7;
+     color: #D97706;
+ }
+
+ .sensor-title {
+     font-size: 1.25rem;
+     font-weight: 600;
+ }
+
+ .sensor-values {
+     display: grid;
+     grid-template-columns: repeat(3, 1fr);
+     gap: 1rem;
+     margin-bottom: 1.5rem;
+ }
+
+ .value-box {
+     text-align: center;
+     padding: 0.5rem;
+     border-radius: 0.5rem;
+     background: var(--background);
+ }
+
+ .value-label {
+     font-size: 0.875rem;
+     color: var(--text-light);
+     margin-bottom: 0.25rem;
+ }
+
+ .value {
+     font-size: 1.25rem;
+     font-weight: 600;
+ }
+
+ .progress-container {
+     height: 8px;
+     background: #EDF2F7;
+     border-radius: 4px;
+     overflow: hidden;
+ }
+
+ .progress-bar {
+     height: 100%;
+     border-radius: 4px;
+     transition: width 0.5s ease;
+ }
+
+ .last-update {
+     text-align: center;
+     color: var(--text-light);
+     font-size: 0.875rem;
+     margin-top: 2rem;
+ }
+
+ .chart-container {
+     background: white;
+     border-radius: 1rem;
+     padding: 1.5rem;
+     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+     margin-top: 2rem;
+ }
+
+ .error-message {
+     background: #FEE2E2;
+     color: #DC2626;
+     padding: 1rem;
+     border-radius: 0.5rem;
+     text-align: center;
+     display: none;
+ }
+
+ @media (max-width: 768px) {
+     body {
+         padding: 1rem;
+     }
+
+     .title {
+         font-size: 2rem;
+     }
+
+     .sensor-values {
+         grid-template-columns: 1fr;
+     }
+ }

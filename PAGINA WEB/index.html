@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTerrarium Monitor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/estiloCSS.css">
+    <script src="/script.js" defer></script>
+
+</head>
+
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">
+                <i class="fas fa-leaf"></i> Monitor Terrario
+            </h1>
+        </header>
+
+        <div class="error-message" id="errorMessage"></div>
+
+        <div class="status-grid" id="sensorGrid">
+
+        </div>
+
+        <div class="chart-container">
+            <canvas id="historyChart"></canvas>
+        </div>
+
+        <div class="last-update" id="lastUpdate"></div>
+    </div>
+
+
+</body>
+
+</html>
